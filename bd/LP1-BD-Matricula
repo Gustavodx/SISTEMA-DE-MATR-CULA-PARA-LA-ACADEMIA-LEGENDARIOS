@@ -1,0 +1,271 @@
+-- borra la bd si existe
+DROP DATABASE IF EXISTS matricula;
+-- creamos la bd
+CREATE DATABASE matricula;
+-- activamos la bd
+USE matricula;
+
+create table empleado(
+codEmpleado char(4) primary key,
+dniEmpleado char(8),
+nombreEmpleado varchar(30),
+apellidoEmpleado varchar(30),
+usuario char(5),
+clave char(5),
+telefono char(9),
+fechaIngreso date,
+estado  boolean DEFAULT 1 -- boolean da 2 valores: 0=false | 1=true
+);
+
+create table escuela(
+codEscuela int primary key,
+nombreEscuela varchar(40),
+precio double
+);
+select * from escuela;
+
+create table curso(
+codCurso char(4) primary key,
+nombreCurso varchar(40),
+creditos int,
+ciclo int,
+cantHoras int,
+codEscuela int,
+capacidad int,
+estado  boolean DEFAULT 1, -- boolean da 2 valores: 0=false | 1=true
+foreign key(codEscuela) references escuela (codEscuela)
+);
+
+create table profesor(
+codProfesor char(4) primary key,
+dniProfesor char(8),
+nombreProfesor varchar(30),
+apellidoProfesor varchar(30),
+telefonoProfesor char(9),
+fechaIngresoProfesor date,
+codCurso char(4),
+codEscuela int,
+direccionProfesor varchar(40),
+estado  boolean DEFAULT 1, -- boolean da 2 valores: 0=false | 1=true
+foreign key(codEscuela) references escuela (codEscuela),
+foreign key(codCurso) references curso (codCurso)
+);
+
+create table estados_alumnos(
+codEstado int primary key,	-- estado1: registrado, estado2:matriculado, estado3: retirado
+descripcion varchar(30)
+);
+
+create table alumno(
+codAlumno char(4) primary key,
+dniAlumno char(8),
+nombreAlumno varchar(30),
+apellidoAlumno varchar(30),
+fechaIngresoAlumno date,
+codEscuela int,
+carrera varchar(30),
+telefonoAlumno char(9),
+direccionAlumno varchar(40),
+estadoAlumno int default 1,
+estado  int DEFAULT 1,
+foreign key(codEscuela) references escuela (codEscuela),
+foreign key(estadoAlumno) references estados_alumnos (codEstado)
+);
+
+create table matricula(
+codMatricula char(5) primary key,
+fechaMatricula date,
+codAlumno char(4),
+codEmpleado char(4),
+totalPago decimal(8,2),
+foreign key(codAlumno) references alumno (codAlumno),
+foreign key(codEmpleado) references empleado (codEmpleado)
+);
+
+select * from curso;
+select * from matricula;
+select * from profesor;
+select * from alumno;
+
+create table detalleMatricula(
+codMatricula char(5) not null,
+codProfesor char(4),
+codCurso char(4),
+vacante int default 1,
+importe decimal(8,2),
+primary key (codMatricula, codProfesor, codCurso),
+foreign key (codMatricula) references matricula(codMatricula),
+foreign key(codProfesor) references profesor (codProfesor),
+foreign key(codCurso) references curso (codCurso)
+);
+select * from detalleMatricula;
+/*create table boleta(
+num_bol char(4) not null,
+fch_bol date,
+codAlumno char(4),
+codEmpleado char(4),
+total_bol decimal(8,2),
+primary key (num_bol),
+foreign key (codAlumno) references alumno(codAlumno),
+foreign key (codEmpleado) references empleado(codEmpleado)
+);*/
+
+insert into estados_alumnos values (1,'Registrado');
+insert into estados_alumnos values (2,'Matriculado');
+insert into estados_alumnos values (3,'Retirado');
+
+insert into escuela values (1,'Tecnolog�a',350);
+insert into escuela values (2,'Comunicaci�n',300);
+insert into escuela values (3,'Ciencias',400);
+
+insert into empleado values ('E001','76139061','Jos�','Morales C�spedes','user1','mysql','929916681','2013/05/20',1);
+insert into empleado values ('E002','78653241','Mar�a','Del Campo','user2','ciber','994674681','2010/04/13',1);
+insert into empleado values ('E003','77349091','Pedro','Navaja','user3','contr','938967431','2017/07/10',1);
+
+insert into curso values ('C001','Programacion Orientada a Objetos I',4,3,50,1,30,1);
+insert into curso values ('C002','Ingl�s para la Traducci�n II',3,2,45,2,35,1);
+insert into curso values ('C003','Qu�mica I',5,1,60,3,40,1);
+select * from curso;
+
+insert into profesor values ('P001','66847331','Javier','Torres Pineda','966748932','2016/08/09','C003',3,'Av Las Palmeras 736',1);
+insert into profesor values ('P002','65874573','Marcus','Cornejo Rojas','929967784','2014/10/15','C001',1,'Av Los Jardines 322',1);
+insert into profesor values ('P003','78147081','Andrea','Namuch Negrillo','929636933','2012/02/20','C002',2,'Av Wiesse 914',1);
+
+insert into alumno values ('A001','78713801','Andr�s','Huancas Banderas','2021/05/13',1,'Computacion e Informatica','929913381','Av El Parque 130',1,1);
+insert into alumno values ('A002','75318091','Debbie','Arriaga Quiroz','2022/06/05',2,'Traduccion e Interpretacion','993928572','Av Castilla 1240',1,1);
+insert into alumno values ('A003','77215705','Sara','Herrera Quintanilla','2021/04/20',3,'Medicina Veterinaria','982559691','Av El Bosque 640',1,1);
+
+-- insert into matricula values ('M001','2022/05/29','A001','E001',);
+-- insert into matricula values ('M002','2022/06/05','A002','E002',);
+-- insert into matricula values ('M003','2022/06/08','A003','E003',);
+
+select * from empleado;
+select * from escuela;
+select * from curso;
+select * from profesor;
+select * from alumno;
+select * from matricula;
+select * from alumno;
+select * from estados_alumnos;
+
+create procedure usp_login(vusuario char(5), vclave char(5))
+select * from empleado where usuario = vusuario and clave = vclave;
+-- probando procedimiento almacenado
+select * from escuela;
+
+create procedure usp_listarCursos()
+select c.codCurso, c.nombreCurso, c.creditos, c.ciclo, c.cantHoras, e.nombreEscuela, c.capacidad
+from curso c inner join escuela e
+on c.codEscuela = e.codEscuela
+where c.estado = 1;
+call usp_listarCursos();
+
+select * from alumno;
+
+create procedure usp_estados_alumnos()
+select a.codAlumno, a.dniAlumno, concat_ws(' ',nombreAlumno,apellidoAlumno) as 'Alumno', a.fechaIngresoAlumno, 
+e.nombreEscuela,a.carrera,a.telefonoAlumno,a.direccionAlumno,ea.descripcion
+from alumno a inner join estados_alumnos ea
+on a.estadoAlumno=ea.codEstado inner join escuela e
+on a.codEscuela = e.codEscuela 
+where estado = 1;
+
+call usp_estados_alumnos();
+
+create procedure usp_empleados()
+select e.codEmpleado,e.dniEmpleado,concat_ws(' ',nombreEmpleado,apellidoEmpleado) as 'Empleado',e.usuario,
+e.clave,e.telefono,e.fechaIngreso
+from empleado e
+where estado = 1;
+call usp_empleados();
+
+create procedure usp_profesores()
+select p.codProfesor,p.dniProfesor,concat_ws(' ',nombreProfesor,apellidoProfesor) as 'Profesor',p.telefonoProfesor,
+p.fechaIngresoProfesor,c.nombreCurso,e.nombreEscuela,p.direccionProfesor
+from profesor as p inner join curso c
+on p.codCurso = c.codCurso inner join escuela e
+on p.codEscuela = e.codEscuela
+where p.estado = 1;
+call usp_profesores();
+
+select * from escuela;
+select * from curso;
+select * from profesor;
+select * from detalleMatricula;
+
+
+create procedure usp_curso_profesor()
+select c.codCurso, c.nombreCurso, c.capacidad, concat_ws(' ',nombreProfesor,apellidoProfesor) as 'Profesor', p.codProfesor, e.nombreEscuela, e.precio
+from profesor as p inner join curso c
+on p.codEscuela = c.codEscuela inner join escuela as e
+on p.codEscuela = e.codEscuela;
+call usp_curso_profesor();
+
+-- insert into detalleMatricula values('','','','','');
+select * from matricula;
+select * from detalleMatricula;
+select * from alumno;
+
+update curso set capacidad = capacidad - '' where codCurso = '';
+
+create procedure usp_listadoMatriculasxFecha(f1 date, f2 date)
+select m.codMatricula, m.fechaMatricula, m.codAlumno, m.codEmpleado, dm.codCurso, dm.importe
+from matricula as m inner join detalleMatricula as dm
+on m.codMatricula = dm.codMatricula
+where m.fechaMatricula between f1 and f2;
+-- probando procedimiento almacenado
+call usp_listadoMatriculasxFecha('2000/01/01','2022/06/30');
+
+create procedure nomalumno()
+select codAlumno, concat_ws(' ',nombreAlumno,apellidoAlumno) as 'Alumno', dniAlumno
+from alumno;
+call nomalumno();
+
+select * from empleado;
+select * from curso;
+select * from detalleMatricula;
+select * from escuela;
+
+create procedure lista_matricula_boleta()
+select dm.codCurso, c.nombreCurso, e.precio, dm.importe
+from curso as c inner join detalleMatricula as dm
+on c.codCurso = dm.codCurso inner join escuela as e
+on c.codEscuela = e.codEscuela;
+call lista_matricula_boleta();
+
+select substring(max(codMatricula),2) from matricula;
+
+select * from matricula
+where codMatricula = 'M0007';
+
+select * from alumno;
+select * from estados_alumnos;
+select * from empleado;
+select * from curso;
+
+--
+Drop procedure if exists usp_listadoEmpleadoxFecha;
+create procedure usp_listadoEmpleadoxFecha(fec1 date, fec2 date)
+select e.codEmpleado, e.nombreEmpleado, e.apellidoEmpleado,e.telefono
+from empleado as e
+where e.fechaIngreso between fec1 and fec2;
+-- probando procedimiento almacenado
+call usp_listadoEmpleadoxFecha('2000/01/01','2022/06/01');
+--	
+Drop procedure if exists usp_listadoEstadoAlumno;
+create procedure usp_listadoEstadoAlumno(estado varchar(20))
+select a.codAlumno, concat_ws(' ',a.nombreAlumno,a.apellidoAlumno) as 'Alumno', a.carrera,e.descripcion
+from alumno as a inner join estados_alumnos as e
+where e.descripcion = estado;
+-- probando procedimiento almacenado
+call usp_listadoEstadoAlumno('Registrado');
+--
+Drop procedure if exists usp_listadoAlumnosxCarrera;
+create procedure usp_listadoAlumnosxCarrera(carrera varchar(80))
+select a.codAlumno, a.dniAlumno,concat_ws(' ',a.nombreAlumno,a.apellidoAlumno) as 'Alumno',e.nombreEscuela, a.carrera
+from alumno as a inner join escuela e
+where a.carrera = carrera;	
+-- probando procedimiento almacenado
+call usp_listadoAlumnosxCarrera('Computacion e Informatica');
+call usp_listadoAlumnosxCarrera('Medicina Veterinaria');
+call usp_listadoAlumnosxCarrera('Traduccion e Interpretacion');
